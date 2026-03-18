@@ -10,15 +10,15 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 class BinanceDataStream:
-    def __init__(self, engine):
+    def __init__(self, engine, order_manager): 
         self.engine = engine
+        self.order_manager = order_manager 
         self.keep_running = True
         base_url = config.BINANCE_WS_URL
         streams = [f"{symbol.lower()}@bookTicker" for symbol in config.SYMBOLS]
         self.url = base_url + "/".join(streams)
         
         self.expected_currencies_count = self._calculate_expected_currencies()
-
     def _calculate_expected_currencies(self) -> int:
         expected_currencies = set()
         for symbol in config.SYMBOLS:
@@ -86,9 +86,10 @@ class BinanceDataStream:
         while self.keep_running:
             await asyncio.sleep(0.2) # Częstotliwość skanowania grafu
             
-            wynik = self.engine.bellman_ford(config.BASE_CURRENCY)
-            if wynik:
-                logger.info(f"💰 Arbitrage found! Path: {wynik}")
+            result = self.engine.bellman_ford(config.BASE_CURRENCY)
+            if result:
+                logger.info(f" Arbitrage found! Path: {result}")
+                self.order_manager.execute_arbitrage(wynik)
             else:
                 pass
 

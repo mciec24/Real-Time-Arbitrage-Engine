@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 
 @dataclass(frozen=True, slots=True)
 class Settings:
-    
+
     BINANCE_WS_URL: str = "wss://stream.binance.com:9443/stream?streams="
     
 
@@ -18,6 +18,7 @@ class Settings:
     QUOTE_CURRENCIES: list[str] = field(default_factory=lambda: ['USDT', 'BTC', 'ETH', 'EUR', 'BNB'])
 
     BASE_CURRENCY: str = "USDT"
+    INITIAL_BALANCE: float = 100.0
     MIN_PROFIT_PCT: float = 0.1
     FEE: float = 0.001
 
