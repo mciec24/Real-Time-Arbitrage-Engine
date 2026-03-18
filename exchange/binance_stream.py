@@ -4,8 +4,10 @@ import json
 import time
 from core.models import MarketTick
 
+
 class BinanceDataStream:
-    def __init__(self):
+    def __init__(self, engine):
+        self.engine = engine
         base_url = config.BINANCE_WS_URL
         streams = [f"{symbol.lower()}@bookTicker" for symbol in config.SYMBOLS]
         self.url = base_url + "/".join(streams)
@@ -21,8 +23,29 @@ class BinanceDataStream:
             ask_price=float(data['a']),
             timestamp=int(time.time() * 1000)
         )
+        symbol = tick.symbol.upper()
+        base = None
+        quote = None
 
-        print(f"{tick.symbol} BID: {tick.bid_price:.2f} | ASK: {tick.ask_price:.2f}")
+        for q in config.QUOTE_CURRENCIES:
+            if symbol.endswith(q):
+                quote = q
+                base = symbol[:-len(q)]
+                break
+
+        if not base or not quote:
+            return
+        
+        self.engine.add_rate(base, quote, tick.bid_price)
+        if tick.ask_price > 0:
+            self.engine.add_rate(quote, base, 1.0 / tick.ask_price)
+        
+        wynik = self.engine.bellman_ford(config.BASE_CURRENCY)
+
+        if wynik:
+            print(f"\n💰 ARBITRAŻ ZNALEZIONY! Ścieżka: {wynik}")
+        else:
+            print(".", end="", flush = True)
 
 
     def on_error(self, ws, error):
