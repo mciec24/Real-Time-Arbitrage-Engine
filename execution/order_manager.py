@@ -1,41 +1,37 @@
 import math
+import logging
 from config.settings import config
+from core.models import ArbitrageOpportunity
+
+logger = logging.getLogger(__name__)
+
 
 class OrderManager:
     def __init__(self, engine):
         self.engine = engine
-        self.paper_trading = True
-        self.initial_balance = config.INITIAL_BALANCE 
+        self.initial_balance = config.INITIAL_BALANCE
 
-    def execute_arbitrage(self, path: list[str]):
-        print("\n" + "="*50)
-        print(f"🚀 STARTING VIRTUAL EXECUTION (PAPER TRADING)")
-        print(f"📍 Path to execute: {' -> '.join(path)}")
-        
-        current_balance = self.initial_balance
-        start_coin = path[0]
-        
-        print(f"💰 Starting balance: {current_balance:.4f} {start_coin}")
-        print("-" * 50)
+    def execute_arbitrage(self, opportunity: ArbitrageOpportunity):
+        path = opportunity.path
+        balance = self.initial_balance
+
+        logger.info("=" * 50)
+        logger.info(f"START ARBITRAGE | Path: {' -> '.join(path)}")
 
         for i in range(len(path) - 1):
-            from_coin = path[i]
-            to_coin = path[i+1]
-            
-            weight = self.engine.graph[from_coin][to_coin]
-            real_rate = math.exp(-weight)
-            
-            current_balance = current_balance * real_rate
-            
-            print(f"STEP {i+1}: Exchanging {from_coin} to {to_coin}")
-            print(f"   -> Rate: {real_rate:.6f}")
-            print(f"   -> Current Balance: {current_balance:.4f} {to_coin}")
+            u, v = path[i], path[i + 1]
 
-        print("-" * 50)
-        
-        profit = current_balance - self.initial_balance
-        profit_percentage = (profit / self.initial_balance) * 100
+            # Weight already includes the applied fee
+            weight = self.engine.graph[u][v]
+            rate = math.exp(-weight)
 
-        print(f" FINAL BALANCE: {current_balance:.4f} {start_coin}")
-        print(f" PURE PROFIT: {profit:.4f} {start_coin} ({profit_percentage:.4f}%)")
-        print("="*50 + "\n")
+            balance *= rate 
+
+            logger.info(f"{u} -> {v} | net_rate={rate:.6f} | balance={balance:.4f}")
+
+        profit = balance - self.initial_balance
+        pct = (profit / self.initial_balance) * 100
+
+        logger.info(f"FINAL BALANCE: {balance:.4f}")
+        logger.info(f"NET PROFIT: {profit:.4f} ({pct:.4f}%)")
+        logger.info("=" * 50)

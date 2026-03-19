@@ -1,71 +1,91 @@
 import math
+from typing import Dict, List, Optional
+from core.models import ArbitrageOpportunity
+
 
 class Graph:
-
     def __init__(self) -> None:
-        #słownik słowników do reprezentacji krawedzi
-        self.graph: dict[str, dict[str, float]]= {}
+        self.graph: Dict[str, Dict[str, float]] = {}
         self.currencies: set[str] = set()
 
+    def add_rate(self, base: str, quote: str, rate: float) -> None:
+        if rate <= 0 or math.isnan(rate) or math.isinf(rate):
+            return
 
-    def add_rate(self, base_currency: str, other_currency: str, rate: float) -> None:
-        if base_currency not in self.graph:
-            self.graph[base_currency] = {}
+        if base not in self.graph:
+            self.graph[base] = {}
 
-        self.graph[base_currency][other_currency] = -math.log(rate)
-        self.currencies.add(base_currency)
-        self.currencies.add(other_currency)
+        self.graph[base][quote] = -math.log(rate)
 
+        self.currencies.add(base)
+        self.currencies.add(quote)
 
-    def bellman_ford(self, start_currency: str) -> bool | list[str]:
-        predecessors: dict[str, str | None] = {}
-        distances:dict[str, float] = {}
-        for currency in self.currencies:
-            predecessors[currency] = None
-            distances[currency] = float('inf')
-        distances[start_currency] = 0
+    def bellman_ford(self, start: str) -> Optional[ArbitrageOpportunity]:
+        distances = {c: float("inf") for c in self.currencies}
+        predecessors = {c: None for c in self.currencies}
+
+        distances[start] = 0
+
         for i in range(len(self.currencies)):
-            has_changed = False
-            for elem, targets in self.graph.items():
-                for currency, weight in targets.items():
-                    if distances[currency] > distances[elem] + weight:
-                        if i == len(self.currencies) - 1:
-                            path = Graph.retrieve_path(currency, predecessors)
-                            path = Graph.rotate_cycle(path, start_currency)
+            updated = False
 
-                            if not path: # Jeśli rotateCycle zwróciło False
-                                print("Znalazłem arbitraż, ale nie zawiera naszej waluty bazowej. Odrzucam!")
-                                return False
-                            
-                            print("Ujemny cykl")
-                            return path
-                        distances[currency] = distances[elem] + weight
-                        predecessors[currency] = elem
-                        has_changed = True
-        #skoro w pierwszej iteracji niz sie nie poprawilo to znaczy ze nie ma arbitrazu
-            if not has_changed:
+            for u in self.graph:
+                for v, weight in self.graph[u].items():
+                    if distances[u] + weight < distances[v]:
+                        distances[v] = distances[u] + weight
+                        predecessors[v] = u
+                        updated = True
+
+                        if i == len(self.currencies) - 1:
+                            cycle = self._retrieve_cycle(v, predecessors)
+                            cycle = self._rotate_cycle(cycle, start)
+
+                            if not cycle:
+                                return None
+
+                            profit = self._calculate_profit(cycle)
+
+                            return ArbitrageOpportunity(
+                                path=cycle,
+                                expected_profit_pct=profit
+                            )
+
+            if not updated:
                 break
-        print("Nie ma arbitrazu na rynku")
-        return False
+
+        return None
+
+    def _calculate_profit(self, path: List[str]) -> float:
+        balance = 1.0
+
+        for i in range(len(path) - 1):
+            u, v = path[i], path[i + 1]
+            weight = self.graph[u][v]
+            rate = math.exp(-weight)
+            balance *= rate
+
+        return (balance - 1.0) * 100
+
     @staticmethod
-    def retrieve_path(end_currency: str, predecessors: dict[str, str|None]) -> list[str]:
-        path = []
-        while end_currency not in path:
-            path.append(end_currency)
-            end_currency = predecessors[end_currency]
-        path.append(end_currency)
-        #obciecie ogona zeby wydobyc sama petle
-        start_index = path.index(end_currency)
-        clean_cycle = path[start_index:]
-        clean_cycle.reverse()
-        return clean_cycle
+    def _retrieve_cycle(end: str, predecessors: Dict[str, str | None]) -> List[str]:
+        cycle = []
+        while end not in cycle:
+            cycle.append(end)
+            end = predecessors[end]
+
+        cycle.append(end)
+        idx = cycle.index(end)
+        cycle = cycle[idx:]
+        cycle.reverse()
+        return cycle
+
     @staticmethod
-    def rotate_cycle(path: list[str], start_currency: str) -> list[str] | bool:
-        #odrzucam cykl ktory nie zawiera mojej waluty bazowej
-        if start_currency not in path:
-            return False
-        idx = path.index(start_currency)
-        path.pop()
+    def _rotate_cycle(path: List[str], start: str) -> Optional[List[str]]:
+        if start not in path:
+            return None
+
+        idx = path.index(start)
+        path = path[:-1]
         path = path[idx:] + path[:idx]
-        path.append(start_currency)
+        path.append(start)
         return path

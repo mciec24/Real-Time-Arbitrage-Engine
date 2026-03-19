@@ -19,7 +19,7 @@ class Settings:
 
     BASE_CURRENCY: str = "USDT"
     INITIAL_BALANCE: float = 100.0
-    MIN_PROFIT_PCT: float = 0.1
+    MIN_PROFIT_PCT: float = 0.2
     FEE: float = 0.001
 
 config = Settings()
