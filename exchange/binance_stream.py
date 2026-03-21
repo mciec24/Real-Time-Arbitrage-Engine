@@ -16,10 +16,10 @@ logger = logging.getLogger(__name__)
 class BinanceDataStream:
     """
     Manages real-time WebSocket connections to Binance to consume order book data 
-    and continuously evaluates the market for triangular arbitrage opportunities.
+    and evaluates the market for triangular arbitrage opportunities.
 
-    Runs two concurrent asynchronous tasks:
-    1. A listener updating a shared exchange rate graph with real-time bid/ask prices.
+    Executes two concurrent asynchronous tasks:
+    1. A listener updating a shared exchange rate graph with real-time bid/ask prices and volumes.
     2. A worker periodically snapshotting the graph and executing cycle detection.
     """
 
@@ -43,7 +43,7 @@ class BinanceDataStream:
 
     def _calculate_expected_currencies(self) -> int:
         """
-        Calculates the total number of unique currencies expected in the graph 
+        Calculates the expected number of unique currencies in the graph 
         based on the configured trading symbols.
 
         Returns:
@@ -61,14 +61,11 @@ class BinanceDataStream:
 
     async def _process_messages(self, ws) -> None:
         """
-        Listens to the WebSocket stream, parses order book updates, 
-        and safely updates the shared exchange rate graph.
-        
-        Includes latency protection: drops packets older than 50ms based 
-        on the exchange's Event Time ('E').
+        Listens to the WebSocket stream, parses Level 2 order book updates,
+        drops stale packets, and safely updates the graph with rate and liquidity data.
         """
         fee_multiplier = 1.0 - config.FEE
-        MAX_LATENCY_MS = 50
+        MAX_LATENCY_MS = 50 
 
         async for message in ws:
             if not self.keep_running:
@@ -79,32 +76,35 @@ class BinanceDataStream:
                 if not data:
                     continue
 
+                # Latency check
                 exchange_time = data.get("E") or data.get("T")
                 current_local_time = int(time.time() * 1000)
 
-                # Latency check
                 if exchange_time:
                     latency = current_local_time - exchange_time
-                    
                     if latency > MAX_LATENCY_MS:
                         logger.debug(f"Dropped stale packet for {data.get('s')}. Latency: {latency}ms")
                         continue
-                    
                     timestamp = exchange_time
                 else:
                     timestamp = current_local_time
 
-                # Parse top-of-book prices (supports @bookTicker strings and @depth nested lists)
-                raw_bid = data["b"][0][0] if isinstance(data.get("b"), list) and data["b"] else data.get("b")
-                raw_ask = data["a"][0][0] if isinstance(data.get("a"), list) and data["a"] else data.get("a")
-
-                if not raw_bid or not raw_ask:
+                # Parse Level 2 Order Book Depth
+                if "b" not in data or "a" not in data:
                     continue
+
+                if not data["b"] or not data["a"]:
+                    continue
+
+                raw_bid_p, raw_bid_q = data["b"][0][0], data["b"][0][1]
+                raw_ask_p, raw_ask_q = data["a"][0][0], data["a"][0][1]
 
                 tick = MarketTick(
                     symbol=data["s"],
-                    bid_price=float(raw_bid),
-                    ask_price=float(raw_ask),
+                    bid_price=float(raw_bid_p),
+                    bid_qty=float(raw_bid_q),
+                    ask_price=float(raw_ask_p),
+                    ask_qty=float(raw_ask_q),
                     timestamp=timestamp
                 )
 
@@ -113,9 +113,14 @@ class BinanceDataStream:
                     continue
 
                 async with self.lock:
-                    self.engine.add_rate(base, quote, tick.bid_price * fee_multiplier)
+                    # Note: Base volume is used directly as a simplification for the MVP.
+                    # In a production system, this volume should be normalized to config.BASE_CURRENCY.
+                    volume_base = tick.bid_qty
+                    self.engine.add_rate(base, quote, tick.bid_price * fee_multiplier, volume_base)
+
                     if tick.ask_price > 0:
-                        self.engine.add_rate(quote, base, (1.0 / tick.ask_price) * fee_multiplier)
+                        volume_base = tick.ask_qty
+                        self.engine.add_rate(quote, base, (1.0 / tick.ask_price) * fee_multiplier, volume_base)
                         
             except Exception as e:
                 logger.error(f"Processing error: {e}")
@@ -142,7 +147,7 @@ class BinanceDataStream:
         Periodically checks the graph for negative-weight cycles (arbitrage opportunities).
 
         Takes a locked snapshot of the graph and offloads the CPU-bound Bellman-Ford 
-        algorithm to a separate thread to prevent blocking the asyncio event loop.
+        algorithm to a separate thread to prevent event loop blocking.
         """
         while len(self.engine.currencies) < self.expected_currencies_count:
             await asyncio.sleep(0.1)
