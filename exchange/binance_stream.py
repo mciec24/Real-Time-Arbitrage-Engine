@@ -65,7 +65,6 @@ class BinanceDataStream:
         drops stale packets, and safely updates the graph with rate and liquidity data.
         """
         fee_multiplier = 1.0 - config.FEE
-        MAX_LATENCY_MS = 50 
 
         async for message in ws:
             if not self.keep_running:
@@ -82,7 +81,7 @@ class BinanceDataStream:
 
                 if exchange_time:
                     latency = current_local_time - exchange_time
-                    if latency > MAX_LATENCY_MS:
+                    if latency > config.MAX_LATENCY_MS:
                         logger.debug(f"Dropped stale packet for {data.get('s')}. Latency: {latency}ms")
                         continue
                     timestamp = exchange_time
