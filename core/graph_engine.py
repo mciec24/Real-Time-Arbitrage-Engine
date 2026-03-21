@@ -129,11 +129,11 @@ class Graph:
             List[str]: The extracted cycle path in the correct execution order.
         """
         cycle = []
-        while end not in cycle:
+        for _ in range(len(predecessors)):
+            if end in cycle:
+                break
             cycle.append(end)
-            # We know 'end' has a predecessor here because it's part of a cycle
-            end = predecessors[end]  # type: ignore
-
+            end = predecessors[end]
         cycle.append(end)
         idx = cycle.index(end)
         cycle = cycle[idx:]
