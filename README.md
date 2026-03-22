@@ -70,12 +70,12 @@ arbitrage-engine/
 Setup & Installation
 1. Clone the repository
 
-Bash
-git clone [https://github.com/YourUsername/arbitrage-engine.git](https://github.com/YourUsername/arbitrage-engine.git)
-cd arbitrage-engine
+```bash
+git clone https://github.com/mciec24/Real-Time-Arbitrage-Engine.git
+cd Real-Time-Arbitrage-Engin
 2. Create and activate a virtual environment
 
-Bash
+```bash
 python -m venv venv
 # On Unix/macOS:
 source venv/bin/activate  
@@ -83,7 +83,7 @@ source venv/bin/activate
 venv\Scripts\activate
 3. Install dependencies
 
-Bash
+```bash
 pip install -r requirements.txt
 4. Configuration (Optional)
 You can override default settings by creating a .env file in the root directory:
@@ -94,14 +94,14 @@ MIN_PROFIT_PCT=0.15
 MAX_LATENCY_MS=40
 5. Run the Engine
 
-Bash
+```bash
 python main.py
 Testing
 The project uses pytest for unit and asynchronous testing. Test doubles (Spies, Fakes) are preferred over complex mocks to ensure reliable and readable tests.
 
 To run the test suite:
 
-Bash
+```bash
 pytest -v
 Future Improvements
 Dynamic Volume Normalization: Normalizing base/quote volumes dynamically for non-USD-pegged pairs to ensure perfectly accurate bottleneck calculations across mixed-currency paths.
