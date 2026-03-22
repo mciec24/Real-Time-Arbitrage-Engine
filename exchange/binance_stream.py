@@ -4,6 +4,7 @@ import time
 import websockets
 import logging
 from typing import Tuple, Optional
+from websockets.client import WebSocketClientProtocol
 
 from config.settings import config
 from core.models import MarketTick
@@ -59,7 +60,7 @@ class BinanceDataStream:
                     break
         return len(currencies)
 
-    async def _process_messages(self, ws) -> None:
+    async def _process_messages(self, ws: WebSocketClientProtocol) -> None:
         """
         Listens to the WebSocket stream, applies defensive parsing, 
         drops stale packets, and safely updates the graph.
