@@ -4,9 +4,7 @@ from typing import TYPE_CHECKING
 
 from config.settings import config
 from core.models import ArbitrageOpportunity
-
-if TYPE_CHECKING:
-    from core.graph_engine import Graph
+from core.graph_engine import Graph
 
 logger = logging.getLogger(__name__)
 

@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-@dataclass(slots=True)
+@dataclass(slots=True, frozen=True)
 class MarketTick:
     """
     Represents a real-time snapshot of the order book for a given trading symbol.
@@ -16,7 +16,7 @@ class MarketTick:
     ask_qty: float 
     timestamp: int
 
-@dataclass(slots=True)
+@dataclass(slots=True, frozen=True)
 class ArbitrageOpportunity:
     """
     Encapsulates a detected cyclical arbitrage opportunity.
