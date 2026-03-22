@@ -28,18 +28,16 @@ The engine models the market order book as a directed graph:
 * **Nodes** represent currencies (e.g., BTC, ETH, USDT).
 * **Edges** represent exchange rates and available volume.
 
-
-
 To find profitable arbitrage cycles (which inherently require multiplication of rates), we transform the rates using negative natural logarithms. This allows us to convert the multiplicative problem into an additive shortest-path problem.
 
 For an exchange rate, the edge weight is calculated as:
-$$weight = -\ln(rate)$$
+weight = -ln(rate)
 
-A profitable cycle of $n$ steps exists if the product of the exchange rates is greater than 1:
-$$rate_1 \times rate_2 \times \dots \times rate_n > 1$$
+A profitable cycle of n steps exists if the product of the exchange rates is greater than 1:
+rate_1 * rate_2 * ... * rate_n > 1
 
 By applying the logarithmic transformation, finding a profit translates to finding a negative-weight cycle in the graph:
-$$-\ln(rate_1) - \ln(rate_2) - \dots - \ln(rate_n) < 0$$
+-ln(rate_1) - ln(rate_2) - ... - ln(rate_n) < 0
 
 This is elegantly and efficiently solved using the Bellman-Ford algorithm.
 
@@ -65,47 +63,54 @@ arbitrage-engine/
 ├── main.py                  # Entry point with cross-platform Graceful Shutdown
 ├── requirements.txt         # Project dependencies
 └── README.md
+```
 
+## Setup & Installation
 
-Setup & Installation
-1. Clone the repository
-
+**1. Clone the repository**
 ```bash
-git clone https://github.com/mciec24/Real-Time-Arbitrage-Engine.git
-cd Real-Time-Arbitrage-Engin
-2. Create and activate a virtual environment
+git clone git clone https://github.com/mciec24/Real-Time-Arbitrage-Engine.git
+cd Real-Time-Arbitrage-Engine
+```
 
+**2. Create and activate a virtual environment**
 ```bash
 python -m venv venv
 # On Unix/macOS:
 source venv/bin/activate  
 # On Windows:
 venv\Scripts\activate
-3. Install dependencies
+```
 
+**3. Install dependencies**
 ```bash
 pip install -r requirements.txt
-4. Configuration (Optional)
-You can override default settings by creating a .env file in the root directory:
+```
 
-Fragment kodu
-INITIAL_BALANCE=500.0
-MIN_PROFIT_PCT=0.15
-MAX_LATENCY_MS=40
-5. Run the Engine
+**4. Configuration (Optional)**
+You can override default settings by creating a `.env` file in the root directory:
+```env
+INITIAL_BALANCE=100.0
+MIN_PROFIT_PCT=0.1
+MAX_LATENCY_MS=50
+```
 
+**5. Run the Engine**
 ```bash
 python main.py
-Testing
-The project uses pytest for unit and asynchronous testing. Test doubles (Spies, Fakes) are preferred over complex mocks to ensure reliable and readable tests.
+```
+
+## Testing
+
+The project uses `pytest` for unit and asynchronous testing. Test doubles (Spies, Fakes) are preferred over complex mocks to ensure reliable and readable tests.
 
 To run the test suite:
-
 ```bash
 pytest -v
-Future Improvements
-Dynamic Volume Normalization: Normalizing base/quote volumes dynamically for non-USD-pegged pairs to ensure perfectly accurate bottleneck calculations across mixed-currency paths.
+```
 
-Double-Buffering Locks: Implementing a dual-graph pointer swap mechanism to further reduce the lock contention time during the WebSocket ingestion phase.
+## Future Improvements
 
-Live Execution: Integration with the Binance REST API for real-time order routing via Fill-or-Kill (FOK) orders.
+* **Dynamic Volume Normalization:** Normalizing base/quote volumes dynamically for non-USD-pegged pairs to ensure perfectly accurate bottleneck calculations across mixed-currency paths.
+* **Double-Buffering Locks:** Implementing a dual-graph pointer swap mechanism to further reduce the lock contention time during the WebSocket ingestion phase.
+* **Live Execution:** Integration with the Binance REST API for real-time order routing via Fill-or-Kill (FOK) orders.

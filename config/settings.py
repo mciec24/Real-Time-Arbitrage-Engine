@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     
     # Strict validation bounds to prevent logical errors in the engine.
     INITIAL_BALANCE: float = Field(default=100.0, ge=0.0)
-    MIN_PROFIT_PCT: float = Field(default=0.2, ge=0.0)
+    MIN_PROFIT_PCT: float = Field(default=0.1, ge=0.0)
     MAX_LATENCY_MS: int = Field(default=50, gt=0)
     FEE: float = Field(default=0.001, ge=0.0, lt=1.0)
 
