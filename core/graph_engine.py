@@ -1,7 +1,5 @@
 import math
-from typing import Dict, List, Optional, Tuple
 from core.models import ArbitrageOpportunity
-
 
 class Graph:
     """
@@ -16,19 +14,12 @@ class Graph:
         """
         Initializes an empty graph and a set to track unique currencies.
         """
-        # Graph stores: {base: {quote: (negative_log_rate, available_volume)}}
-        self.graph: Dict[str, Dict[str, Tuple[float, float]]] = {}
+        self.graph: dict[str, dict[str, tuple[float, float]]] = {}
         self.currencies: set[str] = set()
 
     def add_rate(self, base: str, quote: str, rate: float, volume: float) -> None:
         """
         Adds an exchange rate and its associated available liquidity to the graph.
-
-        Args:
-            base (str): The symbol of the base currency.
-            quote (str): The symbol of the quote currency.
-            rate (float): The exchange rate from base to quote.
-            volume (float): The maximum executable amount at this specific rate.
         """
         if rate <= 0 or volume <= 0 or math.isnan(rate) or math.isinf(rate):
             return
@@ -41,24 +32,16 @@ class Graph:
         self.currencies.add(base)
         self.currencies.add(quote)
 
-    def bellman_ford(self, start: str) -> Optional[ArbitrageOpportunity]:
+    def bellman_ford(self, start: str) -> ArbitrageOpportunity | None:
         """
         Executes the Bellman-Ford algorithm to detect negative weight cycles
         and calculates their corresponding bottleneck capacity.
-
-        Args:
-            start (str): The starting and ending currency symbol for the cycle.
-
-        Returns:
-            Optional[ArbitrageOpportunity]: An object containing the cycle path,
-            profit percentage, and maximum viable trade amount; otherwise, None.
         """
         distances = {c: float("inf") for c in self.currencies}
-        predecessors: Dict[str, Optional[str]] = {c: None for c in self.currencies}
+        predecessors: dict[str, str | None] = {c: None for c in self.currencies}
 
         distances[start] = 0
 
-        # Relax edges |V| times. The final iteration detects negative cycles.
         for i in range(len(self.currencies)):
             updated = False
 
@@ -89,19 +72,9 @@ class Graph:
 
         return None
 
-    def _calculate_profit_and_bottleneck(self, path: List[str]) -> Tuple[float, float]:
+    def _calculate_profit_and_bottleneck(self, path: list[str]) -> tuple[float, float]:
         """
         Calculates the net profit percentage and the bottleneck capacity of a cycle.
-
-        The bottleneck capacity is defined as the lowest available liquidity (volume) 
-        found along the path, determining the maximum trade size that avoids slippage.
-
-        Args:
-            path (List[str]): The sequence of currencies representing the arbitrage cycle.
-
-        Returns:
-            Tuple[float, float]: A tuple containing the expected profit percentage 
-            and the bottleneck volume.
         """
         balance = 1.0
         bottleneck_vol = float("inf")
@@ -118,10 +91,9 @@ class Graph:
         return ((balance - 1.0) * 100), bottleneck_vol
 
     @staticmethod
-    def _retrieve_cycle(end: str, predecessors: Dict[str, Optional[str]]) -> List[str]:
+    def _retrieve_cycle(end: str, predecessors: dict[str, str | None]) -> list[str]:
         """
         Backtracks through the predecessor dictionary to safely extract the cycle path.
-        Includes a circuit breaker to prevent infinite loops during graph traversal.
         """
         cycle = []
         for _ in range(len(predecessors)):
@@ -139,7 +111,7 @@ class Graph:
         return cycle
 
     @staticmethod
-    def _rotate_cycle(path: List[str], start: str) -> Optional[List[str]]:
+    def _rotate_cycle(path: list[str], start: str) -> list[str] | None:
         """
         Shifts the cycle array to begin and end with the designated start currency.
         """
