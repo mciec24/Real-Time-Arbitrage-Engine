@@ -43,7 +43,11 @@ class BinanceDataStream:
 
     def _calculate_expected_currencies(self) -> int:
         """
-        Calculates the expected number of unique currencies in the graph.
+        Calculates the expected number of unique currencies in the graph
+        based on the configured trading symbols.
+
+        Returns:
+            int: The number of unique base and quote currencies.
         """
         currencies = set()
         for symbol in config.SYMBOLS:

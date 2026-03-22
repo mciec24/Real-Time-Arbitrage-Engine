@@ -1,6 +1,6 @@
+from __future__ import annotations
 import math
 import logging
-from typing import TYPE_CHECKING
 
 from config.settings import config
 from core.models import ArbitrageOpportunity
@@ -18,7 +18,7 @@ class OrderManager:
     calculates step-by-step balance changes, and logs the execution metrics.
     """
 
-    def __init__(self, engine: 'Graph') -> None:
+    def __init__(self, engine: Graph) -> None:
         """
         Initializes the OrderManager.
 
