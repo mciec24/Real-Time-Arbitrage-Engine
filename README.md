@@ -33,11 +33,14 @@ To find profitable arbitrage cycles (which inherently require multiplication of 
 For an exchange rate, the edge weight is calculated as:
 weight = -ln(rate)
 
-A profitable cycle of n steps exists if the product of the exchange rates is greater than 1:
-rate_1 * rate_2 * ... * rate_n > 1
+For an exchange rate, the edge weight is calculated as:
+$$weight = -\ln(rate)$$
+
+A profitable cycle of $n$ steps exists if the product of the exchange rates is greater than 1:
+$$rate_1 \times rate_2 \times \dots \times rate_n > 1$$
 
 By applying the logarithmic transformation, finding a profit translates to finding a negative-weight cycle in the graph:
--ln(rate_1) - ln(rate_2) - ... - ln(rate_n) < 0
+$$-\ln(rate_1) - \ln(rate_2) - \dots - \ln(rate_n) < 0$$
 
 This is elegantly and efficiently solved using the Bellman-Ford algorithm.
 
@@ -69,7 +72,7 @@ arbitrage-engine/
 
 **1. Clone the repository**
 ```bash
-git clone git clone https://github.com/mciec24/Real-Time-Arbitrage-Engine.git
+git clone https://github.com/mciec24/Real-Time-Arbitrage-Engine.git
 cd Real-Time-Arbitrage-Engine
 ```
 
