@@ -34,7 +34,7 @@ async def main():
     def shutdown_handler(*args):
         logger.info("Shutdown signal received. Initiating graceful shutdown...")
         stream.stop()  # Sets keep_running = False to stop the loops
-        stop_event.set()
+        loop.call_soon_threadsafe(stop_event.set)
 
     # Attempt Unix/Linux/Mac signal registration
     try:

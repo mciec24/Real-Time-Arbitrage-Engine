@@ -3,7 +3,6 @@ import json
 import time
 import websockets
 import logging
-from typing import Tuple, Optional
 from websockets.client import WebSocketClientProtocol
 
 from config.settings import config
@@ -130,7 +129,7 @@ class BinanceDataStream:
             except Exception as e:
                 logger.error(f"Unexpected processing error: {e}")
 
-    def _parse_symbol(self, symbol: str) -> Tuple[Optional[str], Optional[str]]:
+    def _parse_symbol(self, symbol: str) -> tuple[str | None, str | None]:
         """Splits a single Binance trading symbol into its base and quote currencies."""
         symbol = symbol.upper()
         for q in config.QUOTE_CURRENCIES:
