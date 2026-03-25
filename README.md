@@ -4,6 +4,7 @@
 ![Asyncio](https://img.shields.io/badge/asyncio-Enabled-success.svg)
 ![Pydantic](https://img.shields.io/badge/pydantic-V2-red.svg)
 ![WebSockets](https://img.shields.io/badge/websockets-RealTime-orange.svg)
+![Docker](https://img.shields.io/badge/docker-Ready-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 
 A highly optimized, asynchronous Python trading engine designed to detect multi-step cyclic arbitrage opportunities across cryptocurrency pairs in real-time. By leveraging Binance Level 2 Order Book WebSockets and the Bellman-Ford algorithm, this system continuously analyzes market inefficiencies and calculates viable trade routes while strictly accounting for available liquidity and exchange fees.
@@ -33,14 +34,11 @@ To find profitable arbitrage cycles (which inherently require multiplication of 
 For an exchange rate, the edge weight is calculated as:
 weight = -ln(rate)
 
-For an exchange rate, the edge weight is calculated as:
-$$weight = -\ln(rate)$$
-
-A profitable cycle of $n$ steps exists if the product of the exchange rates is greater than 1:
-$$rate_1 \times rate_2 \times \dots \times rate_n > 1$$
+A profitable cycle of n steps exists if the product of the exchange rates is greater than 1:
+rate_1 * rate_2 * ... * rate_n > 1
 
 By applying the logarithmic transformation, finding a profit translates to finding a negative-weight cycle in the graph:
-$$-\ln(rate_1) - \ln(rate_2) - \dots - \ln(rate_n) < 0$$
+-ln(rate_1) - ln(rate_2) - ... - ln(rate_n) < 0
 
 This is elegantly and efficiently solved using the Bellman-Ford algorithm.
 
@@ -65,18 +63,37 @@ arbitrage-engine/
 │   └── test_order_manager.py
 ├── main.py                  # Entry point with cross-platform Graceful Shutdown
 ├── requirements.txt         # Project dependencies
+├── Dockerfile               # Container build instructions
+├── docker-compose.yml       # Orchestration & restart policies
 └── README.md
 ```
 
 ## Setup & Installation
 
+### Option A: Running with Docker (Recommended)
+
 **1. Clone the repository**
 ```bash
-git clone https://github.com/mciec24/Real-Time-Arbitrage-Engine.git
+git clone [https://github.com/mciec24/Real-Time-Arbitrage-Engine.git](https://github.com/mciec24/Real-Time-Arbitrage-Engine.git)
 cd Real-Time-Arbitrage-Engine
 ```
 
-**2. Create and activate a virtual environment**
+**2. Configure Environment Variables**
+Create a `.env` file in the root directory:
+```env
+INITIAL_BALANCE=100.0
+MIN_PROFIT_PCT=0.1
+MAX_LATENCY_MS=50
+```
+
+**3. Build and Run the Container**
+```bash
+docker compose up -d --build
+```
+
+### Option B: Local Setup (Development)
+
+**1. Create and activate a virtual environment**
 ```bash
 python -m venv venv
 # On Unix/macOS:
@@ -85,35 +102,25 @@ source venv/bin/activate
 venv\Scripts\activate
 ```
 
-**3. Install dependencies**
+**2. Install dependencies**
 ```bash
 pip install -r requirements.txt
 ```
 
-**4. Configuration (Optional)**
-You can override default settings by creating a `.env` file in the root directory:
-```env
-INITIAL_BALANCE=100.0
-MIN_PROFIT_PCT=0.1
-MAX_LATENCY_MS=50
-```
-
-**5. Run the Engine**
+**3. Run the Engine**
 ```bash
 python main.py
 ```
 
 ## Testing
 
-The project uses `pytest` for unit and asynchronous testing. Test doubles (Spies, Fakes) are preferred over complex mocks to ensure reliable and readable tests.
-
-To run the test suite:
+The project uses `pytest` for unit and asynchronous testing. To run the suite:
 ```bash
 pytest -v
 ```
 
 ## Future Improvements
 
-* **Dynamic Volume Normalization:** Normalizing base/quote volumes dynamically for non-USD-pegged pairs to ensure perfectly accurate bottleneck calculations across mixed-currency paths.
-* **Double-Buffering Locks:** Implementing a dual-graph pointer swap mechanism to further reduce the lock contention time during the WebSocket ingestion phase.
-* **Live Execution:** Integration with the Binance REST API for real-time order routing via Fill-or-Kill (FOK) orders.
+* **Dynamic Volume Normalization:** Normalizing volumes for accurate bottleneck calculations across mixed-currency paths.
+* **Double-Buffering Locks:** Dual-graph pointer swap mechanism to reduce lock contention.
+* **Live Execution:** Integration with the Binance REST API for real-time order routing.
