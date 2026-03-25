@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  arbitrage-engine:
+    build: .
+    container_name: arbitrage_engine
+    restart: unless-stopped
+    # Automatically load environment variables (e.g., INITIAL_BALANCE, MIN_PROFIT_PCT)
+    env_file:
+      - .env
