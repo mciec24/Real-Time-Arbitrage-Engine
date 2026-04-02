@@ -7,6 +7,11 @@
 ![Docker](https://img.shields.io/badge/docker-Ready-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 
+Disclaimer: Experimental & Learning Project
+This project was built as an intensive learning experiment to explore complex topics that go beyond my standard academic curriculum, specifically: asynchronous programming (asyncio), interacting with real-time external data streams (WebSockets), and translating advanced graph algorithms (Bellman-Ford) into financial contexts.
+
+While the logic is functional and tested, this is a Proof-of-Concept. It allowed me to deeply study concepts like concurrency bottlenecks, configuration management (Pydantic), and the mathematical transformations required to optimize cycle detection.
+
 A highly optimized, asynchronous Python trading engine designed to detect multi-step cyclic arbitrage opportunities across cryptocurrency pairs in real-time. By leveraging Binance Level 2 Order Book WebSockets and the Bellman-Ford algorithm, this system continuously analyzes market inefficiencies and calculates viable trade routes while strictly accounting for available liquidity and exchange fees.
 
 Unlike basic triangular arbitrage bots, this engine is designed to detect profitable cycles of any length (3-step, 4-step, and beyond) by modeling the market as a complete directed graph.
